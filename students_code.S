@@ -20,41 +20,29 @@ sbox:	.byte	99,124,119,123,-14,107,111,-59,48,1,103,43,-2,-41,-85,118
 
 .section	.text
 keyMixing:
-	ret
+	
 
 
 byteSubstitution:
-	pushq %rbp
-	movq %rsp, %rbp
-	subq $4, %rsp
-	movq %rbx, -4(%rbp)
 	xor %rcx, %rcx
-	xor %rdx, %rdx
 	jmp L2_byteSubstitution
 L1_byteSubstitution:
-	jmp L3_byteSubstitution
-	leaq (%rcx, %rdi, 1), %rax
-	leaq (%rdx, %rax, 1), %rax
-	movb (%rax), %bl
-	movb sbox(%rbx), %bl
-	movb %bl, (%rax)
-	incq %rdx
-L3_byteSubstitution:
-	cmpq $4, %rdx
-	jl L1_byteSubstitution
+	movb (%rdi), %dl
+	movb sbox(%rdx), %dl
+	movb %dl, (%rdi)
 	incq %rcx
-	xor %rdx, %rdx
+	incq %rdi
 L2_byteSubstitution:
-	cmpq $4, %rcx
+	cmpq $16, %rcx
 	jl L1_byteSubstitution
-	movq -4(%rbp), %rbx
-	leave
 	ret
+
+
 
 
 shiftRows:
-	ret
+	
 
 
 cipher:
-	ret
+	
