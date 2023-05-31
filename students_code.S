@@ -24,6 +24,31 @@ keyMixing:
 
 
 byteSubstitution:
+	pushq %rbp
+	movq %rsp, %rbp
+	subq $4, %rsp
+	movq %rbx, -4(%rbp)
+	xor %rcx, %rcx
+	xor %rdx, %rdx
+	jmp L2_byteSubstitution
+L1_byteSubstitution:
+	jmp L3_byteSubstitution
+	leaq (%rcx, %rdi, 1), %rax
+	leaq (%rdx, %rax, 1), %rax
+	movb (%rax), %bl
+	movb sbox(%rbx), %bl
+	movb %bl, (%rax)
+	incq %rdx
+L3_byteSubstitution:
+	cmpq $4, %rdx
+	jl L1_byteSubstitution
+	incq %rcx
+	xor %rdx, %rdx
+L2_byteSubstitution:
+	cmpq $4, %rcx
+	jl L1_byteSubstitution
+	movq -4(%rbp), %rbx
+	leave
 	ret
 
 
