@@ -19,7 +19,8 @@ sbox:	.byte	99,124,119,123,-14,107,111,-59,48,1,103,43,-2,-41,-85,118
 		.byte	-116,-95,-119,13,-65,-26,66,104,65,-103,45,15,-80,84,-69,22
 
 .section	.text
-keymixing:
+keyMixing:
+	pushq %rdi 
 	pushq %r12
 	xorq %r12, %r12
 	pushq %r13
@@ -32,9 +33,11 @@ keymixing:
 	movq %r12, 8(%rdi)
 	popq %r13
 	popq %r12
+	popq %rdi 
 	ret
 
 byteSubstitution:
+	pushq %rdi 
 	xor %rcx, %rcx
 	jmp L2_byteSubstitution
 L1_byteSubstitution:
@@ -46,26 +49,89 @@ L1_byteSubstitution:
 L2_byteSubstitution:
 	cmpq $16, %rcx
 	jl L1_byteSubstitution
+	popq %rdi 
 	ret
 
-shiftrows:
+shiftRows:
+	pushq %rdi 
 	pushq %r12
 	pushq %r13
 	xorq %r12, %r12
 	xorq %r13, %r13
 	movq %rdi, %r12
 	movb $0, %cl
-loop_shiftrows:
+loop_shiftRows:
 	movl (%r12), %r13D
 	rorl %cl, %r13D
 	movl %r13D, (%r12)
 	addq $4, %r12
 	addb $8, %cl
 	cmp $32, %cl
-	jne loop_shiftrows
-	popq %r12
+	jne loop_shiftRows
 	popq %r13
+	popq %r12
+	popq %rdi 
 	ret
 
 cipher:
+	pushq %rbp
+	movq %rsp, %rbp
+	subq $20, %rsp
+	movq %rdi, -12(%rbp)
+	movq %rsi, -20(%rbp)
+	movl %edx, %r13D
+	movl $0, -4(%rbp)
+	pushq %r12
+	pushq %r13
+	jmp	L2_cipher
+L5_cipher:
+	movl -4(%rbp), %edi
+	salq $4, %rdi
+	addq -12(%rbp), %rdi
+	movq -20(%rbp), %rsi
+	call keyMixing
+	
+	movl $0, %r12D
+	jmp	L3_cipher
+L4_cipher:
 
+	movl -4(%rbp), %edx
+	salq $4, %rdx
+	movq -12(%rbp), %rdi
+	addq %rdx, %rdi
+	call byteSubstitution
+	call shiftRows
+	call mixColumns
+
+	movl -4(%rbp), %edi
+	salq $4, %rdi
+	addq -12(%rbp), %rdi
+	movq -20(%rbp), %rsi
+	call keyMixing
+
+	addl $1, %r12D
+L3_cipher:
+	cmpl $8, %r12D
+	jle	L4_cipher
+
+	movl -4(%rbp), %edx
+	salq $4, %rdx
+	movq -12(%rbp), %rdi
+	addq %rdx, %rdi
+	call byteSubstitution
+	call shiftRows
+
+	movl -4(%rbp), %edi
+	salq $4, %rdi
+	addq -12(%rbp), %rdi
+	movq -20(%rbp), %rsi
+	call keyMixing
+	
+	addl $1, -4(%rbp)
+L2_cipher:
+	cmpl %r13D, -4(%rbp)
+	jl	L5_cipher
+	popq %r13
+	popq %r12
+	leave
+	ret
