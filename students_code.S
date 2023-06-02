@@ -19,9 +19,20 @@ sbox:	.byte	99,124,119,123,-14,107,111,-59,48,1,103,43,-2,-41,-85,118
 		.byte	-116,-95,-119,13,-65,-26,66,104,65,-103,45,15,-80,84,-69,22
 
 .section	.text
-keyMixing:
-	
-
+keymixing:
+	pushq %r12
+	xorq %r12, %r12
+	pushq %r13
+	movq (%rdi), %r12
+	xorq (%rsi), %r12
+	movq %r12, (%rdi)
+	movq 8(%rdi), %r12
+	movq 8(%rsi), %r13
+	xorq %r13, %r12
+	movq %r12, 8(%rdi)
+	popq %r13
+	popq %r12
+	ret
 
 byteSubstitution:
 	xor %rcx, %rcx
@@ -37,12 +48,24 @@ L2_byteSubstitution:
 	jl L1_byteSubstitution
 	ret
 
-
-
-
-shiftRows:
-	
-
+shiftrows:
+	pushq %r12
+	pushq %r13
+	xorq %r12, %r12
+	xorq %r13, %r13
+	movq %rdi, %r12
+	movb $0, %cl
+loop_shiftrows:
+	movl (%r12), %r13D
+	rorl %cl, %r13D
+	movl %r13D, (%r12)
+	addq $4, %r12
+	addb $8, %cl
+	cmp $32, %cl
+	jne loop_shiftrows
+	popq %r12
+	popq %r13
+	ret
 
 cipher:
-	
+
